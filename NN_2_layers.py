@@ -4,14 +4,20 @@ from matplotlib.pyplot import imread
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.decomposition import PCA
+from glob import iglob
 
-path = os.path.join(os.getcwd(),"Data/Data_test/Lychee/Lychee_test_0.png")
-img = imread(path)
-plt.imshow(img)
+train_path = os.path.join(os.getcwd(),"Data/Data_train/Lychee")
+fruits = pd.DataFrame([])
 
-fruits = pd.Series(img.flatten())
+for path in iglob(os.path.join(train_path,'*.png')):
+    
+    img = imread(path)
+    #plt.imshow(img)
 
-fruits_pca = PCA(n_components=0.8)
+    fruit = pd.Series(img.flatten(),name = os.path.split(path)[1])
+    fruits = fruits.append(fruit)
+
+fruits_pca = PCA()
 fruits_pca.fit(fruits)
 
 class dlnet:
