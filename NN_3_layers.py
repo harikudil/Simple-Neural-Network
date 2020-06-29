@@ -77,7 +77,7 @@ class dlnet:
         self.Y=y
         self.Yh=np.zeros((1,self.Y.shape[0]))
         self.L=2
-        self.dims = [2, 4, 4, 3]
+        self.dims = [2, 3, 3, 3]
         self.param = {}
         self.ch = {}
         self.grad = {}
