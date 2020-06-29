@@ -7,8 +7,8 @@ from sklearn.decomposition import PCA
 from glob import iglob
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import plot_confusion_matrix
 import itertools
+from matplotlib.colors import ListedColormap
 
 def preprocess(dataset):
     if dataset == 'train':
@@ -77,7 +77,7 @@ class dlnet:
         self.Y=y
         self.Yh=np.zeros((1,self.Y.shape[0]))
         self.L=2
-        self.dims = [2, 3, 3, 3]
+        self.dims = [2, 100, 100, 3]
         self.param = {}
         self.ch = {}
         self.grad = {}
@@ -120,8 +120,8 @@ def forward(self):
     self.ch['Zo'],self.ch['Ao']=Zh2,Ah2
     
     self.Yh=Ao
-    loss=nloss(self,Ao)
-    return self.Yh, loss
+    #loss=nloss(self,Ao)
+    return self.Yh#, loss
 
 def nloss(self,Yh):
     loss = Yh - self.Y
@@ -132,6 +132,7 @@ def nloss(self,Yh):
 
 def backward(self):
     dcost_dzo = self.Yh - self.Y
+    
     dzo_dwo = self.ch['Ah2']
     dcost_wo = np.dot(dzo_dwo.T, dcost_dzo)
     dcost_bo = dcost_dzo
@@ -195,13 +196,13 @@ def gd(self,X, Y, iter = 3000):
         #for i in range(0, iter):
         try:
             while dloss>0:  
-                Yh, loss=forward(self)
+                Yh=forward(self)
                 backward(self)
             
                 if i % 500 == 0:
                     dloss = np.sum(-self.Y * np.log(self.Yh))
                     print ("Cost after iteration %i: %f " %(i, dloss))
-                    self.loss.append(loss)
+                    
                 i += 1
         except  KeyboardInterrupt:
             print("Stopping training.....")
@@ -211,7 +212,7 @@ def gd(self,X, Y, iter = 3000):
 def pred(self,x, y):  
         self.X=x
         self.Y=y
-        pred, loss= forward(self)    
+        pred= forward(self)    
         comm = np.zeros((y.shape))
         print("\n\nPREDICTED OUTPUT")
         print(pred)
@@ -244,6 +245,48 @@ def plot_confusion(expected,predicted):
     for i,j in itertools.product(range(cf.shape[0]),range(cf.shape[1])):
         plt.text(j,i,format(cf[i,j],'d'),horizontalalignment='center',color='white' if cf[i,j] >thresh else 'black')
     plt.show();
+
+def plot_decision_regions(X, y, self, pr_ou , resolution=0.02):
+
+    # setup marker generator and color map
+   
+    colors = ('green', 'red', 'blue', 'gray', 'cyan')
+    
+
+    # plot the decision surface
+    x1_min, x1_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+    x2_min, x2_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+    xx1, xx2 = np.meshgrid(np.arange(x1_min, x1_max, resolution),
+                           np.arange(x2_min, x2_max, resolution))
+    #Z = classifier.predict(np.array([xx1.ravel(), xx2.ravel()]).T)
+    self.X = np.array([xx1.ravel(), xx2.ravel()]).T
+    # self.Yh = yh
+    # self.Y= y
+    Z = forward(self) 
+   
+    
+    comm = np.zeros((Z.shape[0]))
+    for i in range(0, Z.shape[0]):
+        comm[i] = Z[i,:].argmax()
+    Z = comm.reshape(xx1.shape)     
+       
+    cmap = ListedColormap(colors[:len(np.unique(comm))])
+    
+    plt.figure(2)
+    plt.contourf(xx1, xx2, Z, alpha=0.3, cmap=cmap)
+    plt.contour(xx1, xx2, Z,colors = 'k',linewidths = 0.5)
+    
+    plt.xlim(xx1.min(), xx1.max())
+    plt.ylim(xx2.min(), xx2.max())
+    pos = np.where(pr_ou[:]==0)
+    ax = plt.scatter(X[pos,0],X[pos,1],c = 'green',label= 'Lychee')
+    bx = plt.scatter(X[np.where(pr_ou[:]==1),0],X[np.where(pr_ou[:]==1),1],c = 'red',label= 'Carambula')
+    cx = plt.scatter(X[np.where(pr_ou[:]==2),0],X[np.where(pr_ou[:]==2),1],c = 'blue',label= 'Pear')
+    plt.legend(handles = [ax,bx,cx])
+    plt.title('Predicted decision region')
+    plt.xlabel('PCA component 1')
+    plt.ylabel('PCA component 2')
+    plt.show
     
     
 [fruits_input,fruits_output] = preprocess('train')
@@ -266,3 +309,7 @@ plt.title('Predicted')
 plt.xlabel('PCA component 1')
 #plt.ylabel('PCA component 2')
 plt.show
+
+
+
+plot_decision_regions(test_input,pred_train_encod,nn,pred_output)

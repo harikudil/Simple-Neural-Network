@@ -67,8 +67,10 @@ def preprocess(dataset):
     
     fruits_pca = PCA(n_components=2)
     fruits_input = fruits_pca.fit_transform(scaled_fruits)
-    
-    #plt.scatter(fruits_input[:,0],fruits_input[:,1],c=label_clr)
+    # plt.figure(4)
+    # plt.scatter(fruits_input[:,0],fruits_input[:,1],c=label_clr)
+    # plt.xlabel('PCA component 1')
+    # plt.ylabel('PCA component 2')
     return fruits_input,one_hot_fruits_output
 
 class dlnet:
@@ -77,7 +79,7 @@ class dlnet:
         self.Y=y
         self.Yh=np.zeros((1,self.Y.shape[0]))
         self.L=2
-        self.dims = [2, 5, 3]
+        self.dims = [2, 100, 3]
         self.param = {}
         self.ch = {}
         self.grad = {}
@@ -221,11 +223,11 @@ def plot_confusion(expected,predicted):
         plt.text(j,i,format(cf[i,j],'d'),horizontalalignment='center',color='white' if cf[i,j] >thresh else 'black')
     plt.show();
 
-def plot_decision_regions(X, y, self,pred_output , resolution=0.02):
+def plot_decision_regions(X, y, self, pr_ou , resolution=0.02):
 
     # setup marker generator and color map
    
-    colors = ('green', 'red', 'orange', 'gray', 'cyan')
+    colors = ('green', 'red', 'blue', 'gray', 'cyan')
     
 
     # plot the decision surface
@@ -248,14 +250,16 @@ def plot_decision_regions(X, y, self,pred_output , resolution=0.02):
     cmap = ListedColormap(colors[:len(np.unique(comm))])
     
     plt.figure(2)
-    plt.contourf(xx1, xx2, Z, alpha=0.9, cmap=cmap)
+    plt.contourf(xx1, xx2, Z, alpha=0.3, cmap=cmap)
     plt.contour(xx1, xx2, Z,colors = 'k',linewidths = 0.5)
     
     plt.xlim(xx1.min(), xx1.max())
     plt.ylim(xx2.min(), xx2.max())
-
-    ax = plt.scatter(X[:,0],X[:,1],c = y)
-    plt.legend(handles = [ax])
+    pos = np.where(pr_ou[:]==0)
+    ax = plt.scatter(X[pos,0],X[pos,1],c = 'green',label= 'Lychee')
+    bx = plt.scatter(X[np.where(pr_ou[:]==1),0],X[np.where(pr_ou[:]==1),1],c = 'red',label= 'Carambula')
+    cx = plt.scatter(X[np.where(pr_ou[:]==2),0],X[np.where(pr_ou[:]==2),1],c = 'blue',label= 'Pear')
+    plt.legend(handles = [ax,bx,cx])
     plt.title('Predicted decision region')
     plt.xlabel('PCA component 1')
     plt.ylabel('PCA component 2')
